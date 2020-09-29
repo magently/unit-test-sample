@@ -2,6 +2,7 @@
 
 namespace Mediafy\Voucher\Test\Unit\Model;
 
+use Magento\Framework\Stdlib\DateTime\DateTime;
 use Magento\Framework\TestFramework\Unit\BaseTestCase;
 use Mediafy\Voucher\Model\Validator;
 use Mediafy\Voucher\Model\Voucher;
@@ -20,8 +21,16 @@ class ValidatorTest extends BaseTestCase
 
     protected function setUp()
     {
+        $objectManager = new \Magento\Framework\TestFramework\Unit\Helper\ObjectManager($this);
+
         $this->voucher = $this->createMock(Voucher::class);
-        $this->validator = new Validator();
+        $this->dateTime = $this->createPartialMock(DateTime::class, ['date']);
+        $this->validator = $objectManager->getObject(
+            Validator::class,
+            [
+                'dateTime' => $this->dateTime
+            ]
+        );
     }
 
     /**
@@ -31,6 +40,16 @@ class ValidatorTest extends BaseTestCase
      */
     public function testIsVoucherValid()
     {
+        $this->dateTime->method('date')->willReturn('2020-01-01 00:00:00');
+        $this->voucher
+            ->expects($this->any())
+            ->method('getStatus')
+            ->willReturn(Voucher::STATUS_UNUSED);
+        $this->voucher
+            ->expects($this->any())
+            ->method('getExpirationDate')
+            ->willReturn('2020-12-31 23:59:59');
+
         $this->assertEquals(true, $this->validator->isValid($this->voucher));
     }
 }
