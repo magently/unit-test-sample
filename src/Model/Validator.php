@@ -34,6 +34,17 @@ class Validator
     public function isValid(Voucher $voucher)
     {
         return ($voucher->getStatus() === Voucher::STATUS_UNUSED)
-            && ($voucher->getExpirationDate() > $this->dateTime->date());
+            && !$this->isExpired($voucher);
+    }
+
+    /**
+     * Check if voucher is expired
+     *
+     * @param Voucher $voucher
+     * @return bool
+     */
+    public function isExpired(Voucher $voucher)
+    {
+        return ($voucher->getExpirationDate() <= $this->dateTime->date());
     }
 }

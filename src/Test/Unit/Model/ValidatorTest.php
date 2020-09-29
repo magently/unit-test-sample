@@ -36,20 +36,41 @@ class ValidatorTest extends BaseTestCase
     /**
      * Test if voucher is valid
      *
+     * @param string $status
+     * @param string $expirationDate
+     * @param string $currentDate
+     * @param bool $expectedResult
      * @return void
+     *
+     * @dataProvider getVoucherTestData
      */
-    public function testIsVoucherValid()
+    public function testIsVoucherValid(string $status, string $expirationDate, string $currentDate, bool $expectedResult)
     {
-        $this->dateTime->method('date')->willReturn('2020-01-01 00:00:00');
+        $this->dateTime->method('date')->willReturn($currentDate);
         $this->voucher
             ->expects($this->any())
             ->method('getStatus')
-            ->willReturn(Voucher::STATUS_UNUSED);
+            ->willReturn($status);
         $this->voucher
             ->expects($this->any())
             ->method('getExpirationDate')
-            ->willReturn('2020-12-31 23:59:59');
+            ->willReturn($expirationDate);
 
-        $this->assertEquals(true, $this->validator->isValid($this->voucher));
+        $this->assertEquals($expectedResult, $this->validator->isValid($this->voucher));
+    }
+
+    /**
+     * Voucher data set
+     *
+     * @return array
+     */
+    public function getVoucherTestData(): array
+    {
+        return [
+            [Voucher::STATUS_UNUSED, '2020-12-31 23:59:59', '2020-01-01 00:00:00', true],
+            [Voucher::STATUS_USED, '2020-12-31 23:59:59', '2020-01-01 00:00:00', false],
+            [Voucher::STATUS_UNUSED, '2020-01-01 00:00:00', '2020-12-31 23:59:59', false],
+            [Voucher::STATUS_USED, '2020-01-01 00:00:00', '2020-12-31 23:59:59', false],
+        ];
     }
 }
