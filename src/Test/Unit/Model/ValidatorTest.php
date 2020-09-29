@@ -42,7 +42,7 @@ class ValidatorTest extends BaseTestCase
      * @param bool $expectedResult
      * @return void
      *
-     * @dataProvider getVoucherTestData
+     * @dataProvider getVoucherValidationTestData
      */
     public function testIsVoucherValid(string $status, string $expirationDate, string $currentDate, bool $expectedResult)
     {
@@ -60,17 +60,51 @@ class ValidatorTest extends BaseTestCase
     }
 
     /**
-     * Voucher data set
+     * Test if voucher has expired
+     *
+     * @param string $expirationDate
+     * @param string $currentDate
+     * @param bool $expectedResult
+     * @return void
+     *
+     * @dataProvider getVoucherExpirationTestData
+     */
+    public function testIsVoucherExpired(string $expirationDate, string $currentDate, bool $expectedResult)
+    {
+        $this->dateTime->method('date')->willReturn($currentDate);
+        $this->voucher
+            ->expects($this->once())
+            ->method('getExpirationDate')
+            ->willReturn($expirationDate);
+
+        $this->assertEquals($expectedResult, $this->validator->isExpired($this->voucher));
+    }
+
+    /**
+     * Voucher validation data set
      *
      * @return array
      */
-    public function getVoucherTestData(): array
+    public function getVoucherValidationTestData(): array
     {
         return [
             [Voucher::STATUS_UNUSED, '2020-12-31 23:59:59', '2020-01-01 00:00:00', true],
             [Voucher::STATUS_USED, '2020-12-31 23:59:59', '2020-01-01 00:00:00', false],
             [Voucher::STATUS_UNUSED, '2020-01-01 00:00:00', '2020-12-31 23:59:59', false],
             [Voucher::STATUS_USED, '2020-01-01 00:00:00', '2020-12-31 23:59:59', false],
+        ];
+    }
+
+    /**
+     * Voucher expiration data set
+     *
+     * @return array
+     */
+    public function getVoucherExpirationTestData(): array
+    {
+        return [
+            ['2020-12-31 23:59:59', '2020-01-01 00:00:00', false],
+            ['2020-01-01 00:00:00', '2020-12-31 23:59:59', true],
         ];
     }
 }
